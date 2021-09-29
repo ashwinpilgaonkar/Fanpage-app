@@ -3,6 +3,8 @@ import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'signup_page.dart';
 import 'messages_view.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -13,49 +15,10 @@ class LoginPage extends StatefulWidget {
 class _LoginPage extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
-    /////////////////
-    //   FIREBASE
-    /////////////////
-
     FirebaseAuth auth = FirebaseAuth.instance;
-    auth.authStateChanges().listen((User? user) {
-      if (user == null) {
-        print('User is currently signed out!');
-      } else {
-        print('User is signed in!');
-      }
-    });
-
-    auth.idTokenChanges().listen((User? user) {
-      if (user == null) {
-        print('User is currently signed out!');
-      } else {
-        print('User is signed in!');
-      }
-    });
-
-    auth.userChanges().listen((User? user) {
-      if (user == null) {
-        print('User is currently signed out!');
-      } else {
-        print('User is signed in!');
-      }
-    });
-
-    /////////////////
-    // CONTROLLERS
-    /////////////////
 
     final userNameController = TextEditingController();
     final passwordController = TextEditingController();
-
-    @override
-    void dispose() {
-      // Clean up the controller when the widget is disposed.
-      userNameController.dispose();
-      passwordController.dispose();
-      super.dispose();
-    }
 
     return Center(
       child: Container(
@@ -78,7 +41,7 @@ class _LoginPage extends State<LoginPage> {
                   decoration: const InputDecoration(
                     border: UnderlineInputBorder(),
                     // errorText: 'Error',
-                    labelText: 'Enter your username',
+                    labelText: 'Enter your email',
                   ),
                 ),
               ),
@@ -96,30 +59,90 @@ class _LoginPage extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    textStyle: const TextStyle(fontSize: 14)),
+              SignInButtonBuilder(
+                text: 'Sign in with Email',
+                icon: Icons.email,
+                backgroundColor: Colors.blueGrey[700]!,
                 onPressed: () async {
-                  try {
-                    UserCredential userCredential =
-                        await auth.signInWithEmailAndPassword(
-                            email: userNameController.text,
-                            password: passwordController.text);
-                    //Update state
+                  if (userNameController.text == "") {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text("Please enter a valid username"),
+                    ));
+                  } else if (passwordController.text == "") {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text("Please enter a valid password"),
+                    ));
+                  } else {
+                    try {
+                      UserCredential userCredential =
+                          await auth.signInWithEmailAndPassword(
+                              email: userNameController.text,
+                              password: passwordController.text);
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MessagesView()),
-                    );
-                  } on FirebaseAuthException catch (e) {
-                    if (e.code == 'user-not-found') {
-                      print('No user found for that email.');
-                    } else if (e.code == 'wrong-password') {
-                      print('Wrong password provided for that user.');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MessagesView(
+                                userCredential.user!.providerData[0].email!)),
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Login successful"),
+                      ));
+                    } on FirebaseAuthException catch (e) {
+                      if (e.code == 'user-not-found') {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text("No user found with that email"),
+                        ));
+                      } else if (e.code == 'wrong-password') {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text("Incorrect password"),
+                        ));
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(e.toString()),
+                      ));
                     }
                   }
                 },
-                child: const Text('SUBMIT'),
+              ),
+              SignInButton(
+                Buttons.GoogleDark,
+                onPressed: () async {
+                  final GoogleSignInAccount? googleUser =
+                      await GoogleSignIn().signIn();
+
+                  if (googleUser != null) {
+                    try {
+                      final GoogleSignInAuthentication googleAuth =
+                          await googleUser.authentication;
+
+                      final credential = GoogleAuthProvider.credential(
+                        accessToken: googleAuth.accessToken,
+                        idToken: googleAuth.idToken,
+                      );
+
+                      UserCredential result =
+                          await auth.signInWithCredential(credential);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MessagesView(
+                                result.additionalUserInfo?.profile!['email'])),
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Login successful"),
+                      ));
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(e.toString()),
+                      ));
+                    }
+                  }
+                },
               ),
               const SizedBox(height: 30),
               RichText(
