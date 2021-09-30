@@ -104,77 +104,84 @@ class _SignUpPage extends State<SignUpPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        textStyle: const TextStyle(fontSize: 14)),
-                    onPressed: () async {
-                      if (firstNameController.text == "") {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Please enter your first name"),
-                        ));
-                      } else if (lastNameController.text == "") {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Please enter your last name"),
-                        ));
-                      } else if (emailController.text == "") {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Please enter a valid email address"),
-                        ));
-                      } else if (passwordController.text == "") {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Please enter a valid password"),
-                        ));
-                      } else if (passwordController.text !=
-                          retypePasswordController.text) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Passwords do not match"),
-                        ));
-                      } else {
-                        try {
-                          UserCredential userCredential =
-                              await auth.createUserWithEmailAndPassword(
-                                  email: emailController.text,
-                                  password: passwordController.text);
-
-                          users.add({
-                            'first_name': firstNameController.text,
-                            'last_name': lastNameController.text,
-                            'user_role': 'customer',
-                            'tis': DateTime.now().millisecondsSinceEpoch,
-                            'email': emailController.text
-                          });
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => MessagesView(
-                                    userCredential
-                                        .user!.providerData[0].email!)),
-                          );
-
+                  SizedBox(
+                    height: 50,
+                    width: 320,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          textStyle: const TextStyle(fontSize: 14)),
+                      onPressed: () async {
+                        if (firstNameController.text == "") {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text("Registered a new user successfully"),
+                            content: Text("Please enter your first name"),
                           ));
-                        } on FirebaseAuthException catch (e) {
-                          if (e.code == 'weak-password') {
+                        } else if (lastNameController.text == "") {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Please enter your last name"),
+                          ));
+                        } else if (emailController.text == "") {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Please enter a valid email address"),
+                          ));
+                        } else if (passwordController.text == "") {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Please enter a valid password"),
+                          ));
+                        } else if (passwordController.text !=
+                            retypePasswordController.text) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Passwords do not match"),
+                          ));
+                        } else {
+                          try {
+                            UserCredential userCredential =
+                                await auth.createUserWithEmailAndPassword(
+                                    email: emailController.text,
+                                    password: passwordController.text);
+
+                            users.add({
+                              'first_name': firstNameController.text,
+                              'last_name': lastNameController.text,
+                              'user_role': 'customer',
+                              'tis': DateTime.now().millisecondsSinceEpoch,
+                              'email': emailController.text
+                            });
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => MessagesView(
+                                      userCredential
+                                          .user!.providerData[0].email!)),
+                            );
+
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content:
-                                  Text("The password provided is too weak"),
+                                  Text("Registered a new user successfully"),
                             ));
-                          } else if (e.code == 'email-already-in-use') {
+                          } on FirebaseAuthException catch (e) {
+                            if (e.code == 'weak-password') {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(
+                                content:
+                                    Text("The password provided is too weak"),
+                              ));
+                            } else if (e.code == 'email-already-in-use') {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(
+                                content: Text(
+                                    "An account already exists with that email"),
+                              ));
+                            }
+                          } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(
-                                  "An account already exists with that email"),
+                              content: Text(e.toString()),
                             ));
                           }
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(e.toString()),
-                          ));
                         }
-                      }
-                    },
-                    child: const Text('SIGN UP'),
+                      },
+                      child: const Text('Sign Up'),
+                    ),
                   ),
                   const SizedBox(height: 25),
                 ],

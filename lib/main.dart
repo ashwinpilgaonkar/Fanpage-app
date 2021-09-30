@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Fan Page - Login'),
+          title: const Text('Login'),
         ),
         body: const LoginPage(),
       ),
